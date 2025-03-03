@@ -107,3 +107,25 @@ void http_write(int client_FD, char *string) {
   int len = strlen(string);
   write(client_FD, string, len);
 }
+/*** incoming_request ***/
+void handle_http_stream(server_state *p_state, int client_FD) {
+
+  char buf[BUFFERSIZE] = {0};
+  int bytes_read;
+  client_request request;
+  client_request *p_request = &request;
+
+  // static allocation for now
+  bytes_read = recv(client_FD, buf, BUFFERSIZE - 1, 0);
+  buf[bytes_read] = '\0';
+
+  char *saveptr = buf;
+
+  char *token = strtok_r(buf, "\r\n", &saveptr);
+  printf("First line of request: %s\n", token);
+
+  http_handle_requestline(p_state, client_FD, strdup(token), p_request);
+
+  while ((token = strtok_r(NULL, "\r\n", &saveptr)) != NULL) {
+    HandleHeader(p_state, strdup(token), (strlen(token) + 1) * sizeof(char));
+  }
