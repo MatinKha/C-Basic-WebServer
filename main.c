@@ -172,3 +172,13 @@ void http_handle_requestline(server_state *p_state, int client_FD, char *token,
   strcpy(p_request->HTTP_version, token);
   return;
 }
+/*** requestHandeling ***/
+int handle_client_reqs(server_state *p_state) {
+  int client_FD;
+  while ((client_FD = accept(p_state->server_socket_fd, 0, 0)) != -1) {
+    handle_http_stream(p_state, client_FD);
+  }
+
+  return 0;
+}
+
