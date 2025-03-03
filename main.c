@@ -12,9 +12,17 @@
 #include <unistd.h>
 
 /*** defines ***/
+#define BUFFERSIZE 8192
 /*** declarations ***/
 typedef struct server_state server_state;
 typedef struct client_request client_request;
+void HttpTokenizer(const char *request);
+int handle_client_reqs(server_state *server_state);
+int websocket_init(server_state *server_state);
+void HandleHeader(server_state *state, char *header, int size);
+void http_handle_requestline(server_state *p_state, int client_FD, char *str,
+                             client_request *p_request);
+
 struct server_state {
   int server_socket_fd;
 };
@@ -22,6 +30,18 @@ struct HTTPResponse {
   int Content_Length;
   char Contant_Type;
 };
+struct HTTPHeader {
+  char header_name[1024];
+  char *headerValues[1024];
+};
+struct client_request {
+  char HTTP_version[256];
+  char request_type[128];
+  char path[2048];
+  struct HTTPHeader headers[128];
+};
+/*** globals ***/
+
 void cleanup(server_state *state) {
   close(state->server_socket_fd);
   return;
@@ -40,6 +60,24 @@ int main() {
   websocket_init(&p_state);
   handle_client_reqs(&p_state);
   cleanup(&p_state);
+
+  return 0;
+}
+
+int websocket_init(server_state *p_state) {
+  if ((p_state->server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    die(p_state, "socket");
+  struct sockaddr_in addr = {AF_INET, 0x911f, 0};
+  int opt = 1;
+  setsockopt(p_state->server_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt,
+             sizeof(opt));
+
+  if (bind(p_state->server_socket_fd, (struct sockaddr *)&addr, sizeof(addr)) ==
+      -1)
+    die(p_state, "bind");
+
+  if (listen(p_state->server_socket_fd, 10) == -1)
+    die(p_state, "listen");
 
   return 0;
 }
