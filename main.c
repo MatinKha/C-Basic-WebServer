@@ -150,3 +150,25 @@ void handle_http_stream(server_state *p_state, int client_FD) {
   close(client_FD);
   return;
 }
+
+void http_handle_requestline(server_state *p_state, int client_FD, char *token,
+                             client_request *p_request) {
+  if ((token = strtok(token, " ")) == NULL)
+    die(p_state, "WrongRequest");
+  printf("first part %s \n", token);
+  if (strcmp(token, "GET") == 0) {
+    strcpy(p_request->request_type, token);
+  }
+
+  if ((token = strtok(NULL, " ")) == NULL)
+    die(p_state, "WrongRequest");
+  if (strcmp(token, "/") == 0)
+    strcpy(p_request->path, "/index.html");
+  else
+    strcpy(p_request->path, token);
+
+  if ((token = strtok(NULL, " ")) == NULL)
+    die(p_state, "WrongRequest");
+  strcpy(p_request->HTTP_version, token);
+  return;
+}
