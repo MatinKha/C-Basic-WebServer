@@ -103,3 +103,7 @@ int get_source_file(char *path, size_t path_size, char **p_file_content,
   return 0;
 }
 
+void http_write(int client_FD, char *string) {
+  int len = strlen(string);
+  write(client_FD, string, len);
+}
