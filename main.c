@@ -182,3 +182,33 @@ int handle_client_reqs(server_state *p_state) {
   return 0;
 }
 
+struct httpS {
+  char header[256];
+  char body[256];
+};
+
+/*** parsing ***/
+char *ltrim(char *s) {
+  while (isspace((int)*s))
+    s++;
+  return s;
+}
+
+char *rtrim(char *s) {
+  char *back = s + strlen(s);
+  while (isspace(*--back))
+    ;
+  *(back + 1) = '\0';
+  return s;
+}
+
+char *trim(char *s) { return rtrim(ltrim(s)); }
+void HttpTokenizer(const char *request) {}
+void HandleHeader(server_state *state, char *header, int size) {
+  char *value = NULL;
+  char *prop = NULL;
+  if ((prop = strtok_r(header, ":", &value)) != NULL) {
+    printf("prop = %s\n", prop);
+    printf("value = %s\n", value);
+  }
+}
