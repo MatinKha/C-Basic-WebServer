@@ -81,3 +81,25 @@ int websocket_init(server_state *p_state) {
 
   return 0;
 }
+
+int get_source_file(char *path, size_t path_size, char **p_file_content,
+                    int *p_file_size) {
+  size_t filePathsz = path_size + sizeof(char) * (4 + 1);
+  char *filePath = malloc(filePathsz);
+  snprintf(filePath, filePathsz, "src%s", path);
+  // getting files
+  FILE *p_file = fopen(filePath, "r");
+  free(filePath);
+  if (p_file == NULL) {
+    return -1;
+  }
+  fseek(p_file, 0L, SEEK_END);
+  int file_size = ftell(p_file);
+  *p_file_size = file_size;
+  fseek(p_file, 0L, SEEK_SET);
+  char *fcontent = malloc(file_size);
+  fread(fcontent, 1, file_size, p_file);
+  *p_file_content = fcontent;
+  return 0;
+}
+
