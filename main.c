@@ -129,3 +129,24 @@ void handle_http_stream(server_state *p_state, int client_FD) {
   while ((token = strtok_r(NULL, "\r\n", &saveptr)) != NULL) {
     HandleHeader(p_state, strdup(token), (strlen(token) + 1) * sizeof(char));
   }
+
+  char *f_content;
+  int file_size;
+  if (get_source_file(p_request->path, sizeof(p_request->path), &f_content,
+                      &file_size) == -1)
+    die(p_state, "getting file failed");
+
+  http_write(client_FD, "HTTP/1.0 200 OK\r\n");
+  char *content_len;
+  asprintf(&content_len, "Content-Length: %d\r\n", file_size);
+  http_write(client_FD, content_len);
+  free(content_len);
+  http_write(client_FD, "Connection: close\r\n");
+  http_write(client_FD, "Content-Type: text/html\r\n");
+  http_write(client_FD, "Accept-Encoding: identity\r\n\r\n");
+
+  write(client_FD, f_content, file_size);
+  free(f_content);
+  close(client_FD);
+  return;
+}
