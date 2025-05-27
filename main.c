@@ -93,10 +93,14 @@ int get_source_file(char *path, size_t path_size, char **p_file_content,
   if (p_file == NULL) {
     return -1;
   }
+
+  // reads the file size
   fseek(p_file, 0L, SEEK_END);
   int file_size = ftell(p_file);
   *p_file_size = file_size;
   fseek(p_file, 0L, SEEK_SET);
+
+
   char *fcontent = malloc(file_size);
   fread(fcontent, 1, file_size, p_file);
   *p_file_content = fcontent;
@@ -134,7 +138,12 @@ void handle_http_stream(server_state *p_state, int client_FD) {
   int file_size;
   if (get_source_file(p_request->path, sizeof(p_request->path), &f_content,
                       &file_size) == -1)
-    die(p_state, "getting file failed");
+  {
+    http_write(client_FD, "HTTP/1.0 404 Not Found\r\n");
+    free(f_content);
+    close(client_FD);
+    return;
+  }
 
   http_write(client_FD, "HTTP/1.0 200 OK\r\n");
   char *content_len;
@@ -150,6 +159,7 @@ void handle_http_stream(server_state *p_state, int client_FD) {
   close(client_FD);
   return;
 }
+
 
 void http_handle_requestline(server_state *p_state, int client_FD, char *token,
                              client_request *p_request) {
@@ -172,6 +182,7 @@ void http_handle_requestline(server_state *p_state, int client_FD, char *token,
   strcpy(p_request->HTTP_version, token);
   return;
 }
+
 /*** requestHandeling ***/
 int handle_client_reqs(server_state *p_state) {
   int client_FD;
